@@ -26,7 +26,7 @@ max_iter=100
 # 'alive' cells in the game
 current_population=1
 # 'alive' cell at each rank   
-population_list = np.empty(size, dtype = np.int)
+population_list = np.empty(size, dtype = int)
 # stop when there are no 'alive' cells
 stop_population = 0
 
@@ -68,7 +68,7 @@ if rank==0:
     sendbuf=l
 
 # local game game partitions
-my_grid = np.empty((rows_per_process, num_points), dtype = np.int)
+my_grid = np.empty((rows_per_process, num_points), dtype = int)
 
 # Scatter the game partitions 
 MPI.COMM_WORLD.Scatter(
@@ -79,11 +79,11 @@ MPI.COMM_WORLD.Scatter(
 # for all ranks except rank '0' (the 'top') create an array
 # for recieval of the boarder-values from the 'above' rank.
 if rank > 0:
-    row_above = np.empty((1, num_points), dtype = np.int)
+    row_above = np.empty((1, num_points), dtype = int)
 # for all ranks except rank 'size - 1' create an array
 # for the recieval of the boarder-values from the 'below' rank.
 if rank < size - 1:
-    row_below = np.empty((1, num_points), dtype = np.int)
+    row_below = np.empty((1, num_points), dtype = int)
 
 
 # tags
