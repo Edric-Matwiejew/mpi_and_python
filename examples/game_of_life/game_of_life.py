@@ -225,6 +225,7 @@ while num_iter <  max_iter:
         sol=sol.reshape([num_points,num_points])
         plt.matshow(sol)
         plt.savefig(f"results/{num_iter}")
+        plt.close()
 
     # increment the total number of game iterations.
     num_iter=num_iter+1
