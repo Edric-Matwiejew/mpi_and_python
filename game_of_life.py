@@ -51,11 +51,11 @@ if rank == 0:
     l=np.array([ A[i*rows_per_process:(i+1)*rows_per_process,:] for i in range(size)])
     sendbuf=l
 
-my_grid = np.empty((rows_per_process, num_points), dtype = int)
+local_game_board = np.empty((rows_per_process, num_points), dtype = int)
 
 COMM.Scatter(
         [sendbuf, MPI.INTEGER],
-        [my_grid, MPI.INTEGER],
+        [local_game_board, MPI.INTEGER],
         root = 0
         )
 
@@ -78,7 +78,7 @@ while num_iter < max_iter:
     if rank == 0:
     
         COMM.Send(
-                [my_grid[-1,:], MPI.INTEGER],
+                [local_game_board[-1,:], MPI.INTEGER],
                 dest = 1,
                 tag = rank * 2)
     
@@ -90,7 +90,7 @@ while num_iter < max_iter:
                 tag = (rank - 1) * 2)
     
         COMM.Send(
-                [my_grid[-1,:], MPI.INTEGER],
+                [local_game_board[-1,:], MPI.INTEGER],
                 dest = rank + 1,
                 tag = rank * 2)
     
@@ -101,7 +101,7 @@ while num_iter < max_iter:
                 tag = (rank - 1)*2)
     
         COMM.Send(
-                [my_grid[0,:], MPI.INTEGER],
+                [local_game_board[0,:], MPI.INTEGER],
                 dest = rank - 1,
                 tag = rank * 2 + 1)
     
@@ -113,7 +113,7 @@ while num_iter < max_iter:
                 tag = (rank + 1) * 2 + 1)
     
         COMM.Send(
-                [my_grid[0,:], MPI.INTEGER],
+                [local_game_board[0,:], MPI.INTEGER],
                 dest = rank - 1,
                 tag = rank * 2 + 1)
     
@@ -129,23 +129,23 @@ while num_iter < max_iter:
         row_below.shape=(1,num_points) 
         row_above.shape=(1,num_points)
     
-        next_step, n_alive = gameStep(r_[row_above, my_grid, row_below])
+        next_step, n_alive = gameStep(r_[row_above, local_game_board, row_below])
     
-        my_grid=next_step[1:-1,:]
+        local_game_board=next_step[1:-1,:]
     
     if rank == 0:
         row_below.shape=(1,num_points)
     
-        next_step, n_alive = gameStep(r_[my_grid, row_below])
+        next_step, n_alive = gameStep(r_[local_game_board, row_below])
     
-        my_grid=next_step[0:-1,:]
+        local_game_board=next_step[0:-1,:]
     
     if rank == size - 1:
         row_above.shape=(1,num_points)
     
-        next_step, n_alive = gameStep(r_[row_above, my_grid])
+        next_step, n_alive = gameStep(r_[row_above, local_game_board])
     
-        my_grid=next_step[1:,:]
+        local_game_board=next_step[1:,:]
 
     COMM.Gather(
             [n_alive, MPI.INTEGER],
@@ -159,7 +159,7 @@ while num_iter < max_iter:
 
     total_alive=COMM.bcast(total_alive, root = 0)
 
-    game_grid = COMM.gather(my_grid, root = 0) 
+    game_grid = COMM.gather(local_game_board, root = 0) 
 
     if rank == 0:
         game_iter = np.array(game_grid)
